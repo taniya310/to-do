@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List</title>
+    <style>
+        .container {
+            max-width: 500px;
+            margin: 20px auto;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+
+        .todo-input {
+            width: 70%;
+            padding: 8px;
+            margin-right: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .add-btn {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .add-btn:hover {
+            background-color: #45a049;
+        }
+
+        .todo-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+
+        .todo-list li {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+        }
+
+        .todo-list li span {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+
+        .edit-input {
+            flex-grow: 1;
+            padding: 5px;
+            margin-right: 5px;
+        }
+
+        .delete-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        .edit-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin-right: 5px;
+            cursor: pointer;
+        }
+
+        .edit-btn:hover {
+            background-color: #1976D2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Todo List</h1>
+        <div>
+            <input type="text" class="todo-input" placeholder="Add a new task...">
+            <button class="add-btn">Add</button>
+        </div>
+        <ul class="todo-list"></ul>
+    </div>
+
+    <script>
+        const todoInput = document.querySelector('.todo-input');
+        const addButton = document.querySelector('.add-btn');
+        const todoList = document.querySelector('.todo-list');
+        
+        let todos = [];
+
+        // Load todos from localStorage
+        function loadTodos() {
+            const storedTodos = localStorage.getItem('todos');
+            todos = storedTodos ? JSON.parse(storedTodos) : [];
+            todos.forEach(todo => todo.editing = false); // Reset editing state on load
+        }
+
+        // Save todos to localStorage
+        function saveTodos() {
+            localStorage.setItem('todos', JSON.stringify(todos));
+        }
+        // int ar ={1,2,3,4};
+        // for (int x: ar){
+        //     cout<<x<<endl;
+        // }
+        // Render todos
+        function renderTodos() {
+            todoList.innerHTML = '';
+            todos.forEach(todo => {
+                const li = document.createElement('li');
+                li.setAttribute('data-id', todo.id);
+
+                if (todo.editing) {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'edit-input';
+                    input.value = todo.text;
+                    li.appendChild(input);
+                } else {
+                    const span = document.createElement('span');
+                    span.textContent = todo.text;
+                    li.appendChild(span);
+                }
+
+                const editButton = document.createElement('button');
+                editButton.textContent = todo.editing ? 'Save' : 'Edit';
+                editButton.className = 'edit-btn';
+                li.appendChild(editButton);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.className = 'delete-btn';
+                li.appendChild(deleteButton);
+
+                todoList.appendChild(li);
+            });
+        }
+
+        // Add todo
+        function addTodo(text) {
+            if (text.trim() === '') return;
+            todos.push({
+                id: Date.now(),
+                text: text.trim(),
+                editing: false
+            });
+            saveTodos();
+            renderTodos();
+        }
+
+        // Delete todo
+        function deleteTodo(id) {
+            todos = todos.filter(todo => todo.id !== id);
+            saveTodos();
+            renderTodos();
+        }
+
+        // Event listeners
+        addButton.addEventListener('click', () => {
+            addTodo(todoInput.value);
+            todoInput.value = '';
+        });
+
+        todoInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addTodo(todoInput.value);
+                todoInput.value = '';
+            }
+        });
+
+        todoList.addEventListener('click', (e) => {
+            const target = e.target;
+            const li = target.closest('li');
+            if (!li) return;
+            
+            const id = parseInt(li.dataset.id);
+            const todo = todos.find(todo => todo.id === id);
+
+            if (target.classList.contains('delete-btn')) {
+                deleteTodo(id);
+            } else if (target.classList.contains('edit-btn')) {
+                if (todo.editing) {
+                    // Save changes
+                    const newText = li.querySelector('.edit-input').value.trim();
+                    if (newText) {
+                        todo.text = newText;
+                        todo.editing = false;
+                        saveTodos();
+                        renderTodos();
+                    }
+                } else {
+                    // Start editing
+                    todo.editing = true;
+                    saveTodos();
+                    renderTodos();
+                }
+            }
+        });
+
+        // Initial load
+        loadTodos();
+        renderTodos();
+    </script>
+</body>
+</html>
